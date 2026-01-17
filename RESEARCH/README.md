@@ -263,8 +263,9 @@ The goal is to clearly map **project functionality → tool responsibility**, en
 This project focuses on **understanding how Big Data systems are designed, integrated, and operated** by implementing a realistic end-to-end analytics platform using containerized multi-node clustering.  
 The emphasis is on **architecture, tool interaction, and data flow**, rather than raw data volume.
 ____
-![](../images/logo.png)
-____
+
+<img src="../images/logo.png" style="width:100vw; height:100vh; object-fit:contain;">
+__
 
 
 # Project Implementation & Expected Results
