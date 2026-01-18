@@ -1,4 +1,4 @@
-# Real-Time User Activity Monitoring Big Data Platform
+# Real-Time User Activity Monitoring Big Data Platform (Extended)
 
 ## 1. Real-Life Problem Being Solved
 
@@ -7,8 +7,11 @@ Modern web applications need to monitor user activity in real time to understand
 - How many users are active
 - What actions users perform
 - Whether errors or performance issues are occurring
+- Which pages or sections drive engagement
+- How users navigate internally across the application
+- Where users are coming from geographically
 
-This project simulates a realistic scenario to study **user behavior analytics**, **system performance**, and **stream processing**.
+This project simulates a realistic scenario to study **user behavior analytics**, **system performance**, **stream processing**, and **predictive insights**.
 
 ---
 
@@ -20,7 +23,8 @@ This project simulates a realistic scenario to study **user behavior analytics**
 - Each Flask app simulates 10 concurrent users
 - Each user generates webpage activity events continuously
 
-These Flask applications act as **synthetic data producers**, mimicking real-world user interactions.
+These Flask applications act as **synthetic data producers**, mimicking real-world user interactions.  
+Optionally, **Sqoop** can import additional mock user profile data from a relational database into Hive for enriched analytics.
 
 ---
 
@@ -30,7 +34,7 @@ Each event represents **one user interaction** on a webpage.
 
 The schema includes:
 
-- User information (user ID, session ID, logged-in status)
+- User info (user ID, session ID, logged-in status)
 - Geolocation (country, state, city)
 - Page navigation (current page, previous page, next page, referrer)
 - Section/portion of page interaction
@@ -43,9 +47,10 @@ This allows tracking:
 - Page visits and section-level interactions
 - Internal navigation (previous → current → next page)
 - User location and session info
-- Interaction performance metrics (response time, success/failure)
+- Interaction performance metrics
 - Time spent on each page or section
-## Sample User Activity Event (JSON)
+
+### Sample User Activity Event (JSON)
 
 ```json
 {
@@ -86,49 +91,76 @@ This allows tracking:
 }
 
 ```
----
-
-## 4. Complete Tool Stack
-
-| Layer | Tool | Purpose |
-|-------|------|---------|
-| Data Generation | Flask (3 instances) | Simulate concurrent web users and interactions |
-| Streaming & Ingestion | Apache Kafka | Ingest and buffer continuous event streams |
-| Coordination | ZooKeeper / KRaft | Kafka cluster metadata management |
-| Distributed Storage | HDFS | Scalable and fault-tolerant storage of raw and processed events |
-| Processing Engine | Apache Spark | Batch and structured streaming analytics |
-| Resource Management | YARN | Multi-node cluster resource scheduling |
-| Query & Analytics | Apache Hive | SQL-based querying on historical data |
-| Orchestration | Apache Airflow | Pipeline scheduling and workflow management |
-| Visualization | Streamlit | Real-time and historical dashboards |
-| Containerization | Docker & Docker Compose | Simulate a multi-node cluster on a single machine |
-
----
-
-## 5. Full System Architecture
+## 4. Complete Tool Stack & Implementation
+```
+| Layer                  | Tool                    | Purpose & Implementation in Project                                                                                                             |
+| ---------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data Generation        | Flask (3 instances)     | Simulate multiple concurrent users generating activity events in JSON format                                                                    |
+| Streaming Ingestion    | Apache Flume            | Collect events from Flask apps and reliably deliver them to Kafka and/or HDFS                                                                   |
+| Streaming & Buffering  | Apache Kafka            | Ingest high-velocity event streams, act as a message broker for Spark Streaming                                                                 |
+| Coordination           | ZooKeeper / KRaft       | Maintain Kafka cluster metadata, broker leadership, and consumer group coordination                                                             |
+| Storage                | HDFS                    | Store raw events and processed datasets for batch analytics                                                                                     |
+| NoSQL Storage          | HBase                   | Store individual events for low-latency queries like “last 5 pages visited by user X”                                                           |
+| Processing Engine      | Apache Spark            | - Streaming: Real-time aggregation of page visits, section clicks, navigation paths <br> - Batch: Daily summaries and ETL transformations       |
+| Batch ETL              | Apache Pig              | Preprocess HDFS raw logs, normalize fields, and convert to Hive-ready format                                                                    |
+| Resource Management    | YARN                    | Allocate CPU/memory for Spark executors, schedule streaming and batch jobs across nodes (Docker containers)                                     |
+| Query & Analytics      | Apache Hive             | Create aggregated tables: page metrics, section engagement, navigation paths, geographic distribution; results consumed by Streamlit dashboards |
+| RDBMS Integration      | Apache Sqoop            | Import mock user data from relational databases for enriched analytics                                                                          |
+| Machine Learning       | Apache Mahout           | Run clustering or recommendation algorithms (e.g., product recommendations based on clicks)                                                     |
+| Workflow Orchestration | Apache Airflow          | Schedule Spark, Hive, Pig, and Sqoop workflows to update tables daily/hourly automatically                                                      |
+| Visualization          | Streamlit               | Display precomputed analytics: bar charts for most visited pages, line charts for daily active users, maps for geographic distribution          |
+| Containerization       | Docker & Docker Compose | Simulate multi-node Big Data cluster on a single machine with independent containers                                                            |
+```
+## 5. System Architecture
 
 The system architecture includes:
 
-- Multiple Flask apps generating streaming events
-- Apache Kafka for streaming ingestion
-- Spark Streaming for real-time processing
-- HDFS for distributed storage
-- Spark Batch and Hive for batch analytics
-- Streamlit dashboards for visualization
-- Airflow for workflow orchestration
-- YARN for resource management
-- ZooKeeper for cluster coordination
+#### 1.Data Generation & Ingestion
+ - Flask apps → Flume agents → Kafka → HDFS
+ - Sqoop imports mock relational user data
 
----
+#### 2.Processing
+ - Spark Streaming consumes Kafka events for real-time analytics
+ - Spark batch jobs run ETL and aggregation periodically
+ - Pig scripts preprocess raw HDFS data for Hive tables
 
-## 6. Project Abstract
+#### Storage
 
-This project presents the design and implementation of an **end-to-end Big Data analytics platform** for real-time user activity monitoring using a **Docker-based pseudo-distributed cluster**.  
+ - HDFS stores raw and batch-processed data
+ - HBase stores low-latency, user-level event access
 
-The system simulates realistic web application behavior through multiple Flask applications, each generating continuous streams of user interaction events from concurrent users. These events represent typical webpage activities such as page views, clicks, and form submissions.
+#### Analytics & Workflow
+ - Hive queries summarize daily metrics (pages, sections, navigation paths, geo-distribution)
+ - Mahout performs clustering/recommendations
+ - Airflow schedules all Spark, Hive, Pig, and Sqoop jobs
 
-**Apache Kafka** is used as the streaming ingestion layer to handle high-velocity event data, while **Apache Spark** processes the data using both **structured streaming** and **batch analytics** paradigms. **HDFS** provides distributed storage for scalable and fault-tolerant persistence of raw and processed user activity data. **YARN** manages resource allocation and job scheduling, simulating multi-node cluster execution.
+#### Visualization
+ - Streamlit dashboards consume Hive/HBase tables for real-time and historical insights
 
-Higher-level analytics are performed using **Hive**, allowing SQL-based querying over large volumes of historical user activity data. **Apache Airflow** handles workflow orchestration, and analytical insights are visualized through a **Streamlit** dashboard. All components are deployed as independent **Docker containers**, effectively emulating a multi-node Big Data cluster on a single physical machine.
+#### Coordination & Resource Management
+ - ZooKeeper coordinates Kafka brokers and HBase region servers
+ - YARN manages Spark executor resources across nodes (Docker containers)
 
-The project emphasizes **architectural design**, **system integration**, and **practical understanding of Big Data ecosystem tools**, rather than production-scale performance. It demonstrates how **real-time and batch analytics** can be implemented for user activity monitoring in modern data-driven web systems.
+```
+| Metric              | Example Output                                      | Source                               |
+| ------------------- | --------------------------------------------------- | ------------------------------------ |
+| Most Visited Pages  | /products → 12,450 visits <br> /home → 9,830 visits | Hive table: page_metrics_daily       |
+| Section Engagement  | recommendation_grid → 6,120 interactions            | Hive table: section_engagement_daily |
+| Navigation Paths    | /home → /products → /checkout (3,210 users)         | Hive table: navigation_paths_daily   |
+| Geographic Traffic  | India, Karnataka, Bangalore → 5,200 users           | Hive table: geo_traffic_daily        |
+| Last Pages per User | user_id 4 → /home → /products                       | HBase                                |
+| Recommendations     | Suggest products from most-clicked sections         | Mahout                               |
+```
+
+## 7. Project Abstract
+
+This project implements a full Big Data ecosystem workflow for real-time user activity monitoring, including:
+
+- Data generation: Synthetic user activity streams using Flask
+- Streaming ingestion: Flume and Kafka for reliable event transport
+- Processing: Spark Streaming & batch for aggregation; Pig for ETL
+- Storage: HDFS for raw/aggregated data; HBase for fast lookups
+- Analytics: Hive for SQL-based metrics, Mahout for predictive insights
+- Automation: Airflow schedules Spark, Hive, Pig, and Sqoop jobs
+- Visualization: Streamlit dashboards for end-to-end insights
+- Cluster management: YARN manages Spark resources; ZooKeeper coordinates Kafka/HBase
