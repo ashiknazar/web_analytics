@@ -56,7 +56,7 @@ The system runs as a **Docker-based pseudo distributed cluster**, including **2 
 
 ---
 
-## 🧰 Technologies Used
+## Technologies Used
 
 | Layer | Technology |
 |-----|-----------|
@@ -71,7 +71,7 @@ The system runs as a **Docker-based pseudo distributed cluster**, including **2 
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```tree
 realtime-web-analytics/
@@ -113,7 +113,7 @@ realtime-web-analytics/
 
 ---
 
-## 🧠 Design Decisions
+## Design Decisions
 
 ### Kafka
 - Decouples producers and consumers
@@ -137,7 +137,7 @@ realtime-web-analytics/
 
 ---
 
-## 📦 Docker Strategy
+## Docker Strategy
 
 ### Runs inside containers
 - Kafka & Zookeeper
@@ -160,18 +160,18 @@ realtime-web-analytics/
 
 ---
 
-## 🔄 Data Flow
+## Data Flow
 
-### 1️⃣ Event Generation
+### 1 Event Generation
 - Flask app simulates user behavior
 - JSON events are published to Kafka topic `web_analytics`
 
-### 2️⃣ Raw Data Persistence
+### 2 Raw Data Persistence
 - Storm consumes Kafka
 - Writes raw JSON events to HDFS
 - /raw/web_analytics/date=YYYY-MM-DD/
 
-### 3️⃣ Analytics Processing
+### 3 Analytics Processing
 - Spark consumes Kafka independently
 - Parses and validates events
 - Performs window-based aggregations
@@ -179,7 +179,7 @@ realtime-web-analytics/
 
 ---
 
-## 🗄️ Hive Tables
+## Hive Tables
 
 ### Raw Events
 ```sql
