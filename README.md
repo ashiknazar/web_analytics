@@ -74,7 +74,7 @@ The system runs as a **Docker-based pseudo distributed cluster**, including **2 
 ## Project Structure
 
 ```tree
-realtime-web-analytics/
+web_analytics/
 │
 ├── docker-compose.yml
 ├── .env
